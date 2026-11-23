@@ -1,0 +1,40 @@
+name: Upstream Release Watcher
+
+on:
+  schedule:
+    # Daily at 09:00 Asia/Shanghai (01:00 UTC)
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check p-e-w/heretic for updates
+        id: watch
+        run: |
+          python3 scripts/check_upstream.py --markdown > upstream_report.md
+          python3 scripts/check_upstream.py --json > upstream_report.json
+          HAS_UPDATES=$(python3 -c 'import json; print("true" if json.load(open("upstream_report.json"))["has_updates"] else "false")')
+          LATEST_SHA=$(python3 -c 'import json; print(json.load(open("upstream_report.json"))["latest_commit_short"])')
+          echo "has_updates=$HAS_UPDATES" >> "$GITHUB_OUTPUT"
+          echo "latest_sha=$LATEST_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update tracking issue
+        if: steps.watch.outputs.has_updates == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="Upstream sync: p-e-w/heretic @ ${{ steps.watch.outputs.latest_sha }}"
+          EXISTING=$(gh issue list --state open --search "Upstream sync: p-e-w/heretic in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --title "$TITLE" --body-file upstream_report.md
+          else
+            gh issue create --title "$TITLE" --body-file upstream_report.md
+          fi

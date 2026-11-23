@@ -1,0 +1,75 @@
+# Default configuration for heretic-mlx (censorship removal / refusal suppression).
+# Copy to config.toml or pass via: heretic-mlx <model> --config configs/default.toml
+
+modifier = "ara"
+export_modified_mode = "auto"
+preserve_extra_weights = true
+verify_export = false
+
+modified_model_type = "decensored"
+upload_tags = [
+    "uncensored",
+    "decensored",
+    "abliterated",
+]
+
+system_prompt = "You are a helpful assistant."
+max_response_length = 100
+eval_batch_size = 16
+n_trials = 100
+n_startup_trials = 30
+seed = 42
+checkpoint_dir = "checkpoints_mlx"
+
+scorers = [
+    { plugin = "heretic.scorers.keyword_rate.KeywordRate", optimization = "minimize" },
+    { plugin = "heretic.scorers.kl_divergence.KLDivergence", optimization = "minimize" },
+]
+
+[ara]
+preserve_row_magnitudes = true
+lora_rank = 50
+n_optimization_steps = 5
+max_iter = 20
+history_size = 10
+print_loss = false
+
+[ara.good_prompts]
+dataset = "mlabonne/harmless_alpaca"
+split = "train[:400]"
+column = "text"
+
+[ara.bad_prompts]
+dataset = "mlabonne/harmful_behaviors"
+split = "train[:400]"
+column = "text"
+
+[abliteration]
+orthogonalize_direction = true
+row_normalization = "full"
+full_normalization_lora_rank = 3
+winsorization_quantile = 1.0
+
+[abliteration.good_prompts]
+dataset = "mlabonne/harmless_alpaca"
+split = "train[:400]"
+column = "text"
+
+[abliteration.bad_prompts]
+dataset = "mlabonne/harmful_behaviors"
+split = "train[:400]"
+column = "text"
+
+[eval]
+include_zh_markers = false
+print_responses = false
+
+[eval.refusal_prompts]
+dataset = "mlabonne/harmful_behaviors"
+split = "test[:100]"
+column = "text"
+
+[eval.kl_prompts]
+dataset = "mlabonne/harmless_alpaca"
+split = "test[:100]"
+column = "text"

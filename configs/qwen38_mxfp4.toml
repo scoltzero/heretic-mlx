@@ -1,0 +1,58 @@
+# Example Heretic-MLX config for Qwen3.8-27B MXFP4 / oQ4e on 256GB M5 Ultra
+model = "/Users/scoltc/repo/models/mlx-community/Qwen3.8-27B-mxfp4"
+tokenizer = "/Users/scoltc/repo/models/mlx-community/Qwen3.8-27B-4bit"
+output = "./Qwen3.8-27B-MXFP4-heretic-mlx"
+
+# Default Heretic 2.2 Arbitrary-Rank Ablation (ARA); switch to "abliteration" for fast MPOA checks
+modifier = "ara"
+
+# Export precision for modified layers:
+# - "preserve": re-pack back to original format (+0.00 GB, pure MXFP4 or oQ4e)
+# - "affine5" / "affine6" / "auto": compact high-precision upgrade for MXFP4 (auto -> affine6, +1.6 GB, KL drift ~0.003); preserves original bit-widths on oQ (+0.00 GB)
+# - "affine8": 8-bit affine upgrade on MXFP4 (+3.0 GB, KL drift ~0.002)
+# - "adapter": export standalone mlx-lm LoRA adapter (~164 MB, zero base rewrite)
+export_modified_mode = "auto"
+
+# Optional: restrict modifications to attention projections only (leaves huge MLPs untouched)
+# target_components = ["attn.o_proj"]
+
+# Preserves untouched vision_tower.* and language_model.mtp.* tensors from source safetensors
+preserve_extra_weights = true
+verify_export = true
+
+max_response_length = 100
+eval_batch_size = 16
+n_trials = 60
+n_startup_trials = 20
+seed = 42
+checkpoint_dir = "checkpoints_mlx"
+
+[ara]
+preserve_row_magnitudes = true
+lora_rank = 50
+n_optimization_steps = 5
+max_iter = 20
+history_size = 10
+
+[ara.good_prompts]
+dataset = "mlabonne/harmless_alpaca"
+split = "train[:400]"
+column = "text"
+
+[ara.bad_prompts]
+dataset = "mlabonne/harmful_behaviors"
+split = "train[:400]"
+column = "text"
+
+[eval]
+include_zh_markers = true
+
+[eval.refusal_prompts]
+dataset = "mlabonne/harmful_behaviors"
+split = "test[:100]"
+column = "text"
+
+[eval.kl_prompts]
+dataset = "mlabonne/harmless_alpaca"
+split = "test[:100]"
+column = "text"
