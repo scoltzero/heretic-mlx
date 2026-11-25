@@ -146,7 +146,7 @@ Heretic-MLX combines a modifier with a multivariate TPE hyperparameter optimizer
 
 Heretic-MLX ships with both Heretic 2.2 modifiers, implemented natively in MLX:
 
-* **Arbitrary-Rank Ablation (ARA)**[^2]: The default modifier (`--modifier ara`), implemented in [`ara.py`](src/heretic_mlx/ara.py) using MLX GPU autodiff (`mx.value_and_grad`) + SciPy `L-BFGS-B` + exact per-row magnitude preservation (`row_scale` applied identically during solving, trial evaluation, and weight merging).
+* **Arbitrary-Rank Ablation (ARA)**[^2]: The default modifier (`--modifier ara`), implemented in [`ara.py`](src/heretic_mlx/ara.py) using compiled MLX GPU autodiff (`mx.compile(mx.value_and_grad(...))`) + native Metal Strong-Wolfe `L-BFGS` + exact low-rank Gram per-row magnitude preservation (`row_scale` applied identically during solving, trial evaluation, and weight merging).
 * **Magnitude-Preserving Orthogonal Ablation (MPOA / abliteration)**[^3][^4][^5]: Classic directional ablation (`--modifier abliteration`) with projected orthogonalization, full row normalization + low-rank SVD, and activation winsorization, implemented in [`abliteration.py`](src/heretic_mlx/abliteration.py).
 
 During search, [`quant.py`](src/heretic_mlx/quant.py) wraps target projections in a zero-copy `LoRABypassLinear` that leaves base MXFP4/oQ weights untouched in unified memory and temporarily dequantizes only a single projection matrix to FP32 during solving.

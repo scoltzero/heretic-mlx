@@ -80,6 +80,7 @@ class ARAConfig(BaseModel):
     preserve_row_magnitudes: bool = True
     lora_rank: PositiveInt = 50
     n_optimization_steps: PositiveInt = 5
+    learning_rate: float = 1.0
     max_iter: PositiveInt = 20
     history_size: PositiveInt = 10
     print_loss: bool = False

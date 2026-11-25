@@ -184,7 +184,7 @@ def test_mxfp4_and_oq_lora_bypass_and_precision_upgrade():
 
 
 def test_ara_lbfgs_converges_and_steers_bad_toward_good():
-    """Verify MLX autodiff + SciPy L-BFGS-B ARA solver decreases loss and steers bad outputs."""
+    """Verify compiled MLX GPU Strong-Wolfe L-BFGS ARA solver decreases loss and steers bad outputs."""
     mx.random.seed(7)
     rng = np.random.default_rng(7)
     d_in, d_out, n = 64, 64, 16
